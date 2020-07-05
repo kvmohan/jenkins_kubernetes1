@@ -1,0 +1,55 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: task3pvc-php
+  labels:
+    name: task3-pvc-php
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: phpos
+  labels:
+    app: task3label-php
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+       app: php
+  template:
+    metadata:
+     name: myweb-pod-php
+     labels:
+       app: php
+    spec:
+      containers:
+      - name: task3pod-php
+        image: vimal13/apache-webserver-php
+        volumeMounts:
+        - name: task3vol-php
+          mountPath: /var/www/html/
+      volumes:
+      - name: task3vol-php
+        persistentVolumeClaim:
+          claimName: task3pvc-php
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: task3service
+  labels:
+    app: task3label
+spec:
+  selector:
+    app: php
+  type: NodePort
+  ports:
+    - nodePort: 30000
+      port: 81
+      targetPort: 80
